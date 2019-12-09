@@ -9,33 +9,9 @@
 //1234 Port 
 int serverIsLive = 1;
 int instanceIntiaited = 0;
-/*
-void * listener(void * sock){
-  int * sock_ptr = (int *) sock;
-  char buffer[40]; 
-  while(strcmp(buffer, "disconnected from server\n" != 0)){
-    int temp = read(*sock_ptr, buffer, 40);
-    if(temp == 0){ //There are no bytes 
-        printf("Exiting server");
-        serverIsLive =0;
-        exit(0);
-    }else{
-    printf("Received %s\n", buffer);
-    }
-    
-  if(strcmp(buffer, "disconnected from server\n" == 0)){
-    serverIsLive =0;
-    break;
-  }
-  memset(buffer,0, sizeof(buffer));	
- }
-   exit(0);
-}  
-  */
-
 
 /*
-      quit			(which causes: E.1 GDBYE)
+            quit			(which causes: E.1 GDBYE)
 			create		(which causes: E.2 CREAT)
 			delete		(which causes: E.6 DELBX)			
 			open		(which causes: E.3 OPNBX)
@@ -75,13 +51,7 @@ int main(int argc, char * argv[]){
  int port = atoi(argv[2]);
  char command [40];
  char buffer[40];
- /* struct hostent *host = gethostbyname(ip);
-  if(host == NULL){
-    printf("ERRROR, no such host\n");
-    return;
-  }*/
-  
-  
+ 
   //Create a socket IPv4, TCP
   int sock = socket(AF_INET, SOCK_STREAM,0); //Client's Socket
   struct sockaddr_in server_addr;
@@ -105,17 +75,68 @@ int main(int argc, char * argv[]){
   //Checks for HELLO or help command or quit command 
   do{
     scanf("%s", command);
-    if(isCommand(command)){ //It is not Hello or Quit or Help
+    char * token; 
+    char * list[3];
+    int i = 0;
+    token = strtok(command, " ");
+    //Split command into tokens
+    while( token != NULL ) {
+       printf("In tokenizer\n");
+       if(i == 2){
+         printf("Too many arguments, please try again.\n");
+         break;
+      }
+      list[i] = token;
+      token = strtok(NULL, " ");
+      i++;
+    }  
+    
+    //If there is a !, splits that further replacing current list
+    if(strchr(list[0], '!') != NULL){
+        printf("In second tokenizer\n");
+        i = 0;
+        char * temp = list[0];
+        token = strtok(temp, "!");
+       while( token != NULL ) {
+         if(i == 3){
+           printf("This is an invalid command, please type 'help' for a list of commands\n");
+           break;
+        }
+        list[i] = token;
+        token = strtok(NULL, "!");
+        i++;
+      }
+    }
+  /*
+    printf("%s\n", list[0]);
+    printf("%s\n", command);
+   printf("%d\n", strcmp(command,list[0]));*/
+    printf("I is : %d\n", i);
+    memset(buffer,0, sizeof(buffer));
+    if(isCommand(list[0])){ 
        if(instanceIntiaited){
+         
+          if(strcmp(list[0], "create") == 0){
+            if(i == 1){
+              
+            }
+          
+          
+          }
+         
          //Other commands 
       
         }else{
          printf("A session with DUMB server was not intialized, please use the command HELLO to start.\n");
        }
-    }else if(strcmp(command,"HELLO") == 0){
-      char str[40] = {"HELLO"};
-       send(sock,str,sizeof(str),0);
+    }
+    
+    //HELLO, help, and quit commands 
+    else{
+      if(strcmp(command,"HELLO") == 0){
+       send(sock,"HELLO",5,0);
        read(sock,buffer,40);
+       printf("Buffer is %s\n",buffer);
         if(strcmp(buffer,"HELLO DUMBv0 ready!") == 0){
           if(instanceIntiaited){
             printf("An instance is already initalized, if you would like to close this instance please use the command 'quit'.\n");
@@ -124,15 +145,20 @@ int main(int argc, char * argv[]){
             instanceIntiaited = 1;
           }
       }
-    }else if(strcmp(command, "quit") == 0){
-      send(sock,"GDBYE",5,0);
-      serverIsLive = 0;
-    }else if(strcmp(command,"help") == 0) {
-      printf("Commands are: \n hello \n quit \n create \n delete \n open\n close\n next\n put\n");  
-    }else{
-      printf("This is an invalid command, please type 'help' for a list of commands\n");
+      }else if(strcmp(command, "quit") == 0){
+        send(sock,"GDBYE",5,0);
+        serverIsLive = 0;
+      }else if(strcmp(command,"help") == 0) {
+        printf("Commands are: \n hello \n quit \n create \n delete \n open\n close\n next\n put\n");  
+      }
+      
+      //Invalid command 
+      else{
+        printf("This is an invalid command, please type 'help' for a list of commands\n");
+      }
     }
-	memset(buffer,0, sizeof(buffer));
+    //Clean out buffer
+	  memset(buffer,0, sizeof(buffer));
  }while(serverIsLive);
   
   
