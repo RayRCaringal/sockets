@@ -6,21 +6,16 @@
 #include <string.h>
 
 int serverRunning = 1;
-int instanceIntiated = 0;
 
 int main(int argc, char * argv[]){
-  /*
+ /*
  if(argc < 2){
     printf("There are not enough arguments\n");
   }
   char * ip = argv[1];
   int port = atoi(argv[2]);
-  struct hostent *host = gethostbyname(ip);
-  if(host == NULL){
-    printf("ERRROR, no such host\n");
-    return;
-  }
   */
+  
   //Create Socket
   int server_sock = socket(AF_INET, SOCK_STREAM,0);
   int z = 1;
@@ -46,34 +41,57 @@ int main(int argc, char * argv[]){
   
   
    
-  //  printf("Buffer length = %d\n", strlen(buffer));
-   // int test = strcmp(buffer, "HELLO");
-   // printf("It returns %d\n", test);
-     do{
-      recv(client_sock,buffer,sizeof(buffer),0);   
-      printf("%s\n", buffer);
-      if(strcmp(buffer,"HELLO") == 0){
-        write(client_sock, "HELLO DUMBv0 ready!", 19);
-        instanceIntiated = 1;
-      }else{
-        write(client_sock, "Invalid", 7);
-      }
 
+     do{
+      memset(buffer,0, sizeof(buffer)); 
+      recv(client_sock,buffer,sizeof(buffer),0); 
+      char * token;
+      char * list[3];
+      int i = 0;
+      if(strchr(buffer, ' ') != NULL){
+        token = strtok(temp, " ");
+        //Split command into tokens
+        while(token != NULL ) {
+          printf("Inside tokenizer\n");
+          list[i] = token;
+          token = strtok(NULL, " ");
+          i++;
+        }       
+      }
+        
+      printf("%s\n", buffer);
+      printf("Buffer length = %d\n", strlen(buffer));
+      int test = strcmp(buffer, "HELLO");
+      printf("It returns %d\n", test);
+      printf("I is %d\n",i);
       
-      if(strcmp(buffer,"GDBYE") == 0)serverRunning = 0;
+      if(i == 0){
+        if(strcmp(buffer,"HELLO") == 0){
+        printf("Here\n");
+        write(client_sock, "HELLO DUMBv0 ready!", 19);
+        }else if(strcmp(buffer,"GDBYE") == 0){
+          serverRunning = 0;
+        }else{
+          write(client_sock, "ER:EMPTY", 19);  
+        }
+      }else if(i == 1){
+        if(strcmp(list[0],"CREAT") == 0){
+           if(strlen(list[1]) < 5 || strlen(list[1]) > 25 || !(isalpha(list[1][0]))){
+              write(client_sock, "ER:WHAT?", 8); 
+           }else{
+             //ADD IMPLEMENTATION FOR MESSAGE BOXES 
+             printf("Creates a message box\n");
+           }
+        }
+      }else if(i == 2){
+        
+      }else{
+        write(client_sock, "ER:WHAT?", 8); 
+      }
+      
       
     	memset(buffer,0, sizeof(buffer));
      }while(serverRunning);
-    
-
- /*do{
-        if((strcmp(temp,"GDBYE") == 0))serverRunning = 0;
-
-      }while(serverRunning);
-    char str[] = "Exiting!";
-    write(client_sock, str, sizeof(str));
-    }
-    */
 
   close(client_sock);
   close(server_sock);
