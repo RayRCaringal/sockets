@@ -11,7 +11,7 @@ int serverIsLive = 1;
 int instanceIntiaited = 0;
 
 /*
-            quit			(which causes: E.1 GDBYE)
+      quit			(which causes: E.1 GDBYE)
 			create		(which causes: E.2 CREAT)
 			delete		(which causes: E.6 DELBX)			
 			open		(which causes: E.3 OPNBX)
@@ -51,7 +51,7 @@ int main(int argc, char * argv[]){
  int port = atoi(argv[2]);
  char command [40];
  char buffer[40];
- 
+  
   //Create a socket IPv4, TCP
   int sock = socket(AF_INET, SOCK_STREAM,0); //Client's Socket
   struct sockaddr_in server_addr;
@@ -81,7 +81,7 @@ int main(int argc, char * argv[]){
     token = strtok(command, " ");
     //Split command into tokens
     while( token != NULL ) {
-       printf("In tokenizer\n");
+       //printf("In tokenizer\n");
        if(i == 2){
          printf("Too many arguments, please try again.\n");
          break;
@@ -117,12 +117,32 @@ int main(int argc, char * argv[]){
        if(instanceIntiaited){
          
           if(strcmp(list[0], "create") == 0){
-            if(i == 1){
-              
+            if(i == 3){
+              printf("Too many arguments\n");
+            }else{
+              int created = 1;
+              char str[] = "CREAT ";
+              do{
+                if(i == 1){
+                  printf("create:> ");
+                  scanf("%s", command);
+                  strcat(str, command);
+                }else if(i == 2){
+                  strcat(str, list[1]);
+                  i--;
+                }
+                printf("Str is %s\n", str);
+                
+                send(sock,str,strlen(str),0);
+                read(sock,buffer,40);
+                if(strcmp(buffer,"Ok!") == 0){
+                  printf("%s\n", buffer);
+                  created = 0;
+                 }
+              }while(created);
             }
-          
-          
           }
+    
          
          //Other commands 
       
@@ -147,6 +167,12 @@ int main(int argc, char * argv[]){
       }
       }else if(strcmp(command, "quit") == 0){
         send(sock,"GDBYE",5,0);
+        if(read(sock, buffer, 40) < 0){
+          printf("socket can not be read from and was closed on server side\n");
+        }else{
+          printf("Something went wrong when disconnecting from server, closing client.\n");
+        }
+
         serverIsLive = 0;
       }else if(strcmp(command,"help") == 0) {
         printf("Commands are: \n hello \n quit \n create \n delete \n open\n close\n next\n put\n");  
