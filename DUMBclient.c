@@ -73,73 +73,104 @@ int main(int argc, char *argv[]){
 
     //Checks for HELLO or help command or quit command
     do{
-        scanf("%s", command);
-        char *token;
-        char *list[3];
+        memset(command,0,sizeof(command));
+        fgets(command, 40, stdin);
+        char *list[4];
         int i = 0;
-        token = strtok(command, " ");
-        //Split command into tokens
-        while (token != NULL){
-            //printf("In tokenizer\n");
-            if (i == 2){
-                printf("Too many arguments, please try again.\n");
-                break;
-            }
-            list[i] = token;
-            token = strtok(NULL, " ");
-            i++;
-        }
-
+        printf("Command is %s\n", command);
+        printf("This is the value %d\n",strchr(command, ' '));
+          list[i] = strtok(command, " ");
+          while (list[i] != NULL){
+              i++;
+              list[i] = strtok(NULL, " ");
+          }
+     
+        
         //If there is a !, splits that further replacing current list
-        if (strchr(list[0], '!') != NULL){
+        if (strchr(list[0], '!') > 0){
             printf("In second tokenizer\n");
             i = 0;
             char *temp = list[0];
-            token = strtok(temp, "!");
-            while (token != NULL){
-                if (i == 3){
-                    printf("This is an invalid command, please type 'help' for a list of commands\n");
-                    break;
-                }
-                list[i] = token;
-                token = strtok(NULL, "!");
+            list[i] = strtok(temp, "!");
+            while (list[i] != NULL){
                 i++;
+                list[i] = strtok(NULL, "!");
             }
         }
-        /*
-    printf("%s\n", list[0]);
-    printf("%s\n", command);
-   printf("%d\n", strcmp(command,list[0]));*/
-        printf("I is : %d\n", i);
-        memset(buffer, 0, sizeof(buffer));
+        printf("I is %d\n", i);
+        printf("List[0] = %s\n", list[0]);
         if (isCommand(list[0])){
             if (instanceIntiaited){
+            //CREATE
+              if(i == 2){
+               // printf("List[1] = %s\n", list[1]);
+               // printf("List = %d\n", strcmp(list[0], "create"));
                 if (strcmp(list[0], "create") == 0){
-                    if (i == 3){
-                        printf("Too many arguments\n");
-                    }else{
                         int created = 1;
-                        char str[] = "CREAT ";
                         do{
+                            memset(buffer, 0, sizeof(buffer));
+                            char str[] = "CREAT ";
                             if (i == 1){
-                                printf("create:> ");
+                                printf("create:>\n");
                                 scanf("%s", command);
                                 strcat(str, command);
                             }else if (i == 2){
                                 strcat(str, list[1]);
                                 i--;
                             }
-                            printf("Str is %s\n", str);
+                            printf("Here\n");
                             send(sock, str, strlen(str), 0);
                             read(sock, buffer, 40);
                             if (strcmp(buffer, "Ok!") == 0){
                                 printf("%s\n", buffer);
                                 created = 0;
+                            }else{
+                               printf("%s\n", buffer);
                             }
                         }while (created);
-                    }
                 }
-
+              
+              //OPEN
+              else if(strcmp(list[0], "open") == 0){
+                     int opened = 1;
+                     do{
+                        memset(buffer, 0, sizeof(buffer));
+                        char str[] = "OPNBX ";
+                       if(i == 1){
+                         printf("open:>\n");
+                         scanf("%s", command);
+                         strcat(str,command);
+                       }else if(i == 2){
+                         strcat(str,list[1]);
+                         i--;
+                       }
+                       send(sock, str, strlen(str), 0);
+                       read(sock, buffer, 40);
+                      if (strcmp(buffer, "Ok!") == 0){
+                          printf("\n%s\n", buffer);
+                          opened = 0;
+                      } 
+                     }while(opened);
+                }
+              
+              //CLOSE
+              else if(strcmp(list[0], "close") == 0){
+                       char str[] = "CLSBX ";
+                       if(i == 1){
+                         printf("close:>\n");
+                         scanf("%s", command);
+                         strcat(str,command);
+                       }else if(i == 2){
+                         strcat(str,list[1]);
+                         i--;
+                       }
+                       send(sock, str, strlen(str), 0);
+                       read(sock, buffer, 40);
+                       if (strcmp(buffer, "Ok!") == 0) printf("\n%s\n", buffer);
+                      }
+         
+              }
+ 
                 //Other commands
             }else{
                 printf("A session with DUMB server was not intialized, please use the command HELLO to start.\n");
@@ -147,7 +178,7 @@ int main(int argc, char *argv[]){
         }
         //HELLO, help, and quit commands
         else{
-            if (strcmp(command, "HELLO") == 0){
+            if(strcmp(command, "HELLO\n") == 0){
                 send(sock, "HELLO", 5, 0);
                 read(sock, buffer, 40);
                 printf("Buffer is %s\n", buffer);
@@ -159,7 +190,7 @@ int main(int argc, char *argv[]){
                         instanceIntiaited = 1;
                     }
                 }
-            }else if (strcmp(command, "quit") == 0){
+            }else if (strcmp(command, "quit\n") == 0){
                 send(sock, "GDBYE", 5, 0);
                 if (read(sock, buffer, 40) < 0){
                     printf("socket can not be read from and was closed on server side\n");
@@ -170,7 +201,7 @@ int main(int argc, char *argv[]){
             }else if (strcmp(command, "help") == 0){
                 printf("Commands are: \n hello \n quit \n create \n delete \n open\n close\n next\n put\n");
             }else{
-                printf("This is an invalid command, please type 'help' for a list of commands\n");
+                printf("This is an invalid command, please type 'help' for a list of commands \n");
             }
         }
         //Clean out buffer
