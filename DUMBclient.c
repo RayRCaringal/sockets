@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
+#include "DUMB.h"
 #define _GNU_SOURCE
 //"127.0.0.1" IP
 //8080 Port
@@ -37,6 +38,7 @@ int isCommand(char *buffer){
     }
     return 0;
 }
+
 
 //Check for port fails to bind <- Not Yet Implemented
 int main(int argc, char *argv[]){
@@ -78,7 +80,6 @@ int main(int argc, char *argv[]){
         char *list[4];
         int i = 0;
         printf("Command is %s\n", command);
-        printf("This is the value %d\n",strchr(command, ' '));
           list[i] = strtok(command, " ");
           while (list[i] != NULL){
               i++;
@@ -102,7 +103,6 @@ int main(int argc, char *argv[]){
         if (isCommand(list[0])){
             if (instanceIntiaited){
             //CREATE
-              if(i == 2){
                // printf("List[1] = %s\n", list[1]);
                // printf("List = %d\n", strcmp(list[0], "create"));
                 if (strcmp(list[0], "create") == 0){
@@ -168,9 +168,22 @@ int main(int argc, char *argv[]){
                        read(sock, buffer, 40);
                        if (strcmp(buffer, "Ok!") == 0) printf("\n%s\n", buffer);
                       }
-         
-              }
- 
+                
+                //DELETE
+                else if(strcmp(list[0], "delete") == 0){
+                  char str[] = "DELBX ";
+                  if(i == 1){
+                    printf("close:>\n");
+                    scanf("%s", command);
+                    strcat(str,command);
+                  }else if(i == 2){
+                    strcat(str,list[1]);
+                    i--;
+                  }
+                   send(sock, str, strlen(str), 0);
+                   read(sock, buffer, 40);
+                   if (strcmp(buffer, "Ok!") == 0) printf("\n%s\n", buffer);
+                  }        
                 //Other commands
             }else{
                 printf("A session with DUMB server was not intialized, please use the command HELLO to start.\n");
@@ -192,7 +205,7 @@ int main(int argc, char *argv[]){
                 }
             }else if (strcmp(command, "quit\n") == 0){
                 send(sock, "GDBYE", 5, 0);
-                if (read(sock, buffer, 40) < 0){
+                if (read(sock, buffer, 40) < 1){
                     printf("socket can not be read from and was closed on server side\n");
                 }else{
                     printf("Something went wrong when disconnecting from server, closing client.\n");
@@ -215,5 +228,7 @@ int main(int argc, char *argv[]){
 
     //Close
     close(sock);
+
+  
     return 0;
 }
