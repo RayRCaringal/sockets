@@ -1,7 +1,7 @@
 #ifndef DUMB_H
 #define DUMB_H
 
-typedef struct msg message{
+typedef struct msg message;
   struct msg{
   char * text;
   message * next;
