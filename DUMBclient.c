@@ -74,6 +74,7 @@ int main(int argc, char *argv[]){
     }
 
     //Checks for HELLO or help command or quit command
+    
     do{
         memset(command,0,sizeof(command));
         fgets(command, 40, stdin);
@@ -153,7 +154,7 @@ int main(int argc, char *argv[]){
                      }while(opened);
                 }
               
-              //CLOSE
+              //CLOSE 
               else if(strcmp(list[0], "close") == 0){
                        char str[] = "CLSBX ";
                        if(i == 1){
@@ -189,6 +190,7 @@ int main(int argc, char *argv[]){
                 printf("A session with DUMB server was not intialized, please use the command HELLO to start.\n");
             }
         }
+       
         //HELLO, help, and quit commands
         else{
             if(strcmp(command, "HELLO\n") == 0){
@@ -227,8 +229,7 @@ int main(int argc, char *argv[]){
     //read(sock,buffer,sizeof(buffer)-1);
 
     //Close
-    close(sock);
-
+    close(sock); 
   
     return 0;
 }
