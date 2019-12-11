@@ -1,25 +1,19 @@
 #ifndef DUMB_H
 #define DUMB_H
 
-typedef struct message{
-  char * message;
-  struct message * next;
-}MSG;
-
-
-typedef struct node Node;
-    struct node{
-    char * name;
-    MSG * msg;
-    Node * next;
-    int n; // Counts 
-    int open; //Open is 1 Closed is 0
+typedef struct msg message{
+  struct msg{
+  char * text;
+  message * next;
 };
 
 
-typedef struct connector{
-  Node * head;
-  int sock;
-}con;
+typedef struct node Node;
+  struct node{
+	char * name;
+  message * msg;
+  Node * next;
+  int open; //Open is 1 Closed is 0
+};
 
 #endif
