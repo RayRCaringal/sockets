@@ -12,6 +12,29 @@ int serverRunning = 1;
 pthread_mutex_t lock;
 //Node * dummyHead;
 
+void enQueue(Box * b, char * msg){
+  message * new = (message *)malloc(sizeof(message)); 
+    temp->message = msg; 
+    temp->next = NULL
+    if (b->rear == NULL) { 
+        b->front = new;
+        b->rear = new; 
+        return; 
+    } 
+    b->rear->next = temp; 
+    b->rear = temp; 
+} 
+
+message * deQueue(Box * b) { 
+    if (b->front == NULL)return NULL;   
+    message * temp = q->front; 
+    free(temp); 
+    q->front = q->front->next; 
+    if (q->front == NULL)q->rear = NULL; 
+    return temp; 
+} 
+
+
 void printLL(Node * dummyHead){
    Node * head = dummyHead;
     Node * temp = dummyHead;
@@ -25,12 +48,13 @@ void printLL(Node * dummyHead){
 int counter(Node * dummyHead){
   int i = 0;
   Node * temp = dummyHead;
-  while(dummyHead->next != NULL){
+  while(dummyHead != NULL){
     i++;
     dummyHead = dummyHead->next;
   }
   return i;
 }
+
 //Return 1 found
 //Return 0 NOT EMPTY can't delete
 //Return -1 Still Open can't delete
@@ -63,42 +87,6 @@ int deleter(Node * dummyHead,char * name){
   
 }
 
-/*//return 1 if worked return 0 if name already exists
-int add(Node * dummyHead, char *name){
-    printf("There are %d message boxes\n",counter(dummyHead));
-    printf("In Add\n");
-    Node *temp = dummyHead;
-    Node * result = (Node *) malloc(sizeof(Node));
-    result->name = name;
-    result->next = NULL;
-    result->open = 0;
-    if(temp->next == NULL){
-      printf("Here\n");
-      temp->next = result;
-     // printf("Temp->next = %s\n",temp->next->name);
-       printf("Result2->name = %s\n", temp->next->name);
-      return 1;
-    }
-    temp = temp->next;
-    printf("temp->next = %s\n", temp->name);
-    while (temp->next != NULL){
-        if (strcmp(temp->name, name) == 0){
-          printf("Temp->name = %s\n", temp->name);
-          printf("First\n");
-          return 0;
-        }
-          temp = temp->next;
-    }
-    if (strcmp(temp->name, name) == 0){
-       printf("Temp->name = %s\n", temp->name);  
-      printf("Second\n");
-        return 0;
-    }
-     temp->next = result;
-     printf("Result1->name = %s\n", temp->next->name);
-    return 1;
-}*/
-
 int findName(Node * dummyHead, char * name){
   Node * temp = dummyHead;
   while(temp != NULL){
@@ -125,6 +113,7 @@ int add(Node * dummyHead, char *name){
   result ->next = NULL;
   result-> name = ptr;
   result->open = 0;
+  result->msg = NULL;
   Node * temp = dummyHead;
   while(temp->next != NULL){
     temp = temp->next;
@@ -177,6 +166,10 @@ int closer(Node * dummyHead, char * name){
   return 0; //Was not found
 }
 
+int putter(Node * dummyHead, char * name){
+  
+}
+
 
 void * run(void * arg){
         int client_sock = (uintptr_t)arg;
@@ -191,20 +184,29 @@ void * run(void * arg){
         char *list[4];
         int i = 0;
         printf("Buffer is %s\n", buffer);
+        if(strchr(buffer, '!') >0){//Is put 
+          list[i] =strtpl(buffer,"!");
+          while (list[i] != NULL){
+            i++;
+            list[i] = strtok(NULL, "!");
+        }
+        }else{
         list[i] = strtok(buffer, " ");
         while (list[i] != NULL){
             i++;
             list[i] = strtok(NULL, " ");
         }
-
+  
+        }
+        
         printf("%s\n", buffer);
         printf("I is %d\n", i);
         //pthread_mutex_lock(&lock);
 
         if (i == 1){
-            if (strcmp(buffer, "HELLO") == 0){
+            if (strcmp(list[0], "HELLO") == 0){
                 write(client_sock, "HELLO DUMBv0 ready!", 19);
-            }else if (strcmp(buffer, "GDBYE") == 0){
+            }else if (strcmp(list[0], "GDBYE") == 0){
                 serverRunning = 0;
             }else{
                 //write(client_sock, "ER:EMPTY", 19);
@@ -223,6 +225,7 @@ void * run(void * arg){
                       write(client_sock, "Ok!", 3);
                       printf("Creates a message box\n");
                  }else{
+                   printf("EXIST\n");  
                   write(client_sock, "ER:EXIST", 8);
                }
               }
@@ -247,8 +250,10 @@ void * run(void * arg){
             else if(strcmp(list[0], "CLSBX") == 0){
               printf("In CLSBX\n");
               if(closer(dummyHead,list[1]) == 1){
+                printf("Closed\n");
                 write(client_sock, "Ok!", 3);
               }else{
+                 printf("NOOPN\n");
                  write(client_sock, "ER:NOOPN", 8);
               }              
             }
@@ -262,12 +267,16 @@ void * run(void * arg){
               printf("In DELBX\n");
               int deleted = deleter(dummyHead,list[1]);
               if(deleted == 1){
+                printf("Deleted\n");
                 write(client_sock, "Ok!", 3);
               }else if(deleted == 0){
+                printf("NOTMT\n");
                 write(client_sock, "ER:NOTMT", 8);
               }else if(deleted == -1){
+                printf("OPEND\n");
                 write(client_sock, "ER:OPEND", 8);
               }else{
+                printf("NEXST\n");
                 write(client_sock, "ER:NEXST", 8);
               }
               
@@ -278,6 +287,12 @@ void * run(void * arg){
                 
           }
         }else if (i == 3){
+          //It has to be put 
+          if(strcmp(list[0],"put")==0){
+            printf("In PUT"); 
+          }
+          
+          
         }else{
             write(client_sock, "ER:WHAT?", 8);
         }
