@@ -87,15 +87,16 @@ int deleter(Node * dummyHead,char * name){
   
 }
 
-int findName(Node * dummyHead, char * name){
-  Node * temp = dummyHead;
+Node * findName(Node * dummyHead, char * name){
+  Node * temp = (Node *)malloc(sizeof(Node));
+    temp = dummyHead;
   while(temp != NULL){
     if(strcmp(temp->name,name) == 0){
-      return 1;
+      return temp;
     }
     temp = temp->next;
   }
-  return 0;
+  return NULL;
 }
 
 
@@ -105,7 +106,7 @@ int add(Node * dummyHead, char *name){
   printf("In Add\n");
   char * ptr = malloc(sizeof(char) * strlen(name)+1);
   strcpy(ptr,name);
-  if(findName(dummyHead,name)){
+  if(findName(dummyHead,name) != NULL){
     printf("Found a name\n");
     return 0;
   }
@@ -123,85 +124,45 @@ int add(Node * dummyHead, char *name){
 }
 
 
-//return 1 if worked, return 0 if name already opened, return -1 if name doesn't exist
-int opener(Node * dummyHead,char * name){
-  Node * temp = dummyHead;
-  if(temp->next == NULL){//It's an empty list
-    return -1;
+/*//return 1 if worked, return NULL if name doesn't exist
+Node * opener(Node * dummyHead,char * name){
+  if(dummyHead->next == NULL){//It's an empty list
+    return NULL;
   }
+  Node * temp = (Node *) malloc(sizeof(Node));
+  temp = dummyHead;
   temp = temp->next;
   while(temp != NULL){
     if (strcmp(temp->name, name) == 0){
-      printf("temp is %s\n", temp->name);
       if(temp->open == 0){
         temp->open = 1;
-        return 1;
-      }else{
-          return 0;
-        }
+        return temp;
+      }
      }
     temp = temp->next;
   }
-  return -1;
-}
-
-//return 1 if closed successfuly, return 0 otherwise
-int closer(Node * dummyHead, char * name){
-  Node * temp = dummyHead;
-  if(temp->next == NULL){//It's an empty list
-    return 0;
-  }
-  temp = temp->next;
-  while(temp != NULL){
-    if (strcmp(temp->name, name) == 0){
-      if(temp->open == 1){
-        temp->open = 0;
-        return 1;
-      }else{
-          return 0; //Already closed 
-        }
-     }
-    temp = temp->next;
-  }
-  return 0; //Was not found
-}
+  return NULL;
+}*/
 
 //return 1 on success, return 0 otherwise
-int putMessage(Node * dummyHead, char * name, char * message){
-  printf("In Put: name %s, message %s\n",name,message);
-  Node * temp = dummyHead;
-  if(temp->next == NULL){//empty
-    return 0;
+void putMessage(Node * openedHead, char * message){
+     printf("In Put\n");
+    Node * temp = openedHead;
+    if(temp->msg == NULL){ //No message yet
+        temp->msg = (Box *) malloc(sizeof(Box));
+        temp->msg->rear = NULL;
+        temp->msg->front = NULL;
+     }
+    enqueue(temp->msg,message);
+    return;
   }
-  temp = temp->next;
-  while(temp != NULL){
-    printf("0 temp name is %s\n",temp->name);
-    printf("%d\n",strcmp(temp->name, name));
-    if(strcmp(temp->name, name) == 0){
-      printf("1\n");
-      if(temp->open == 1){
-              printf("2\n");
-         if(temp->msg == NULL){ //No message yet
-            temp->msg = (Box *) malloc(sizeof(Box));
-            temp->msg->rear = NULL;
-            temp->msg->front = NULL;
-        }
-        enqueue(temp->msg,message);
-        return 1;
-      }else{ //Not open
-        return 0;
-      }
-    }
-    temp = temp->next;
-  } 
-return 0;
- }
 
 
 void * run(void * arg){
         int client_sock = (uintptr_t)arg;
         char buffer[40];        
         Node *dummyHead = (Node *) malloc(sizeof(Node));
+        Node *openedHead; 
         dummyHead->next = NULL;
         dummyHead->name = "head"; //This is fine as it's not >5 chars
         do{                 
@@ -235,8 +196,21 @@ void * run(void * arg){
                 write(client_sock, "HELLO DUMBv0 ready!", 19);
             }else if (strcmp(list[0], "GDBYE") == 0){
                 serverRunning = 0;
+            }else if(strcmp(list[0], "NEXTMG") == 0){
+                printf("In Next\n"); 
+            }else if(strcmp(list[0], "CLSBX") == 0){
+              printf("In CLSBX\n");
+             if(openedHead != NULL){
+               openedHead->open = 0;
+               openedHead = NULL;
+               printf("Closed\n");
+               write(client_sock, "Ok!", 3);
+             }else{
+                 printf("NOOPN\n");
+                 write(client_sock, "ER:NOOPN", 8);
+              }              
             }else{
-                //write(client_sock, "ER:EMPTY", 19);
+                write(client_sock, "ER:EMPTY", 19);
             }
         }else if (i == 2){
               if (strlen(list[1]) < 5 || strlen(list[1]) > 25 || !(isalpha(list[1][0]))){
@@ -260,29 +234,20 @@ void * run(void * arg){
             //OPNBX
             else if(strcmp(list[0], "OPNBX") == 0){ 
                     printf("In OPNBX\n");
-                    int opened = opener(dummyHead,list[1]);
-                    if(opened == 1){
-                       write(client_sock, "Ok!", 3);
-                       printf("Opened %s\n", list[1]);
-                    }else if(opened == 0){
-                      printf("Was already opened\n");
-                      write(client_sock, "ER:OPEND", 8);
+                    openedHead = findName(dummyHead,list[1]);
+                    if(openedHead != NULL){
+                       if(openedHead->open == 0){
+                         openedHead->open=1;
+                         write(client_sock, "Ok!", 3);
+                         printf("Opened %s\n", list[1]);
+                       }else{
+                        printf("Already opened\n");
+                        write(client_sock, "ER:OPEND", 8);   
+                       }
                     }else{
                        printf("Does not exist\n");
                        write(client_sock, "ER:NEXIST", 8);
                     }
-
-            }
-            //CSLBX
-            else if(strcmp(list[0], "CLSBX") == 0){
-              printf("In CLSBX\n");
-              if(closer(dummyHead,list[1]) == 1){
-                printf("Closed\n");
-                write(client_sock, "Ok!", 3);
-              }else{
-                 printf("NOOPN\n");
-                 write(client_sock, "ER:NOOPN", 8);
-              }              
             }
                 
             //DELBX
@@ -316,16 +281,18 @@ void * run(void * arg){
           //It has to be put 
           if(strcmp(list[0],"PUTMG")==0){
             printf("In PUT\n"); 
-            if(putMessage(dummyHead,list[1],list[2])==1){
+            if(openedHead != NULL){
+              putMessage(openedHead,list[2]);
               printf("Put successfuly\n"); 
               write(client_sock, "Ok!", 3);                
+              
             }else{
                printf("ER:NOOPN\n");
                write(client_sock, "ER:NOOPN!", 3);
            }
+          }else{
+            write(client_sock, "ER:WHAT?", 8);
           }
-          
-          
         }else{
             write(client_sock, "ER:WHAT?", 8);
         }

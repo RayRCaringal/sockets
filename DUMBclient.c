@@ -38,6 +38,12 @@ int isCommand(char *buffer){
     }
     return 0;
 }
+char * myItoa(int num, char * str){
+        if(str == NULL){
+          return NULL;
+        }
+        return str;
+}
 
 
 //Check for port fails to bind <- Not Yet Implemented
@@ -88,8 +94,8 @@ int main(int argc, char *argv[]){
         char * s2;
         while(list[i] != NULL){
           i++;
-          if(i == 2){
-          int len = strlen(list[0]) + strlen(list[1])+2;
+          if(strcmp(list[0],"put") == 0){
+          int len = strlen(list[0]) +1;
           int len2 = total - len;
           if(len2 < 0) break; //You're on the 2nd arguments
           s2 = malloc(len2+1); // one for the null terminator
@@ -157,16 +163,7 @@ int main(int argc, char *argv[]){
               
               //CLOSE 
               else if(strcmp(list[0], "close") == 0){
-                       char str[] = "CLSBX ";
-                       if(i == 1){
-                         printf("close:>\n");
-                         scanf("%s", command);
-                         strcat(str,command);
-                       }else if(i == 2){
-                         strcat(str,list[1]);
-                         i--;
-                       }
-                       send(sock, str, strlen(str), 0);
+                       send(sock, "CLSBX", 5, 0);
                        read(sock, buffer, 40);
                        if (strcmp(buffer, "Ok!") == 0) printf("\n%s\n", buffer);
                       }
@@ -192,23 +189,25 @@ int main(int argc, char *argv[]){
                   do{
                      memset(buffer, 0, sizeof(buffer));
                      char str[] = "PUTMG!";
-                     if (i == 1){
-                        printf("put:>\n");
+                    char * temp; 
+                    if (i == 1){
+                        printf("put:> ");
                         scanf("%s", command);
+                        int len = strlen(command);
+                        sprintf(temp, "%d", len);
+                        //itoa(len,temp,10);
+                        strcat(str,temp);
+                        strcat(str,"!");
                         strcat(str, command);
+                       i--;
                     }else if (i == 2){
+                        int len = strlen(list[1]);
+                        sprintf(temp, "%d", len);
+                        strcat(str,temp);
+                        strcat(str,"!");
                         strcat(str, list[1]);
-                        strcat(str, "!");
                         i--;
-                        printf("put:>\n");
-                          scanf("%s", command);
-                        strcat(str, command);
-                    }else if(i == 3){
-                       strcat(str, list[1]);
-                       strcat(str, "!");
-                       strcat(str, list[2]);
-                       i = i-2;
-                     }
+                    }
                     send(sock, str, strlen(str), 0);
                     read(sock, buffer, 40);
                     if (strcmp(buffer, "Ok!") == 0){
@@ -220,7 +219,14 @@ int main(int argc, char *argv[]){
                   }while(sent);
                
                 }
-              //Other commands
+              
+              //NEXT
+              else if(strcmp(list[0], "next") == 0){
+                    send(sock, "NXTMG", 5, 0);
+                    read(sock, buffer, 40);
+                    
+              }
+              
             }else{
                 printf("A session with DUMB server was not intialized, please use the command HELLO to start.\n");
             }
