@@ -77,28 +77,29 @@ int main(int argc, char *argv[]){
     
     do{
         memset(command,0,sizeof(command));
+        memset(buffer,0,sizeof(buffer));
         fgets(command, 40, stdin);
-        char *list[4];
+        char *list[5];
         int i = 0;
+        int total = strlen(command);
         printf("Command is %s\n", command);
-          list[i] = strtok(command, " ");
-          while (list[i] != NULL){
-              i++;
-              list[i] = strtok(NULL, " ");
-          }
-     
-        
-        //If there is a !, splits that further replacing current list
-        if (strchr(list[0], '!') > 0){
-            printf("In second tokenizer\n");
-            i = 0;
-            char *temp = list[0];
-            list[i] = strtok(temp, "!");
-            while (list[i] != NULL){
-                i++;
-                list[i] = strtok(NULL, "!");
-            }
+        list[i] = strtok(command, " ");
+        char * s2;
+        while(list[i] != NULL){
+          i++;
+          if(i == 2){
+          int len = strlen(list[0]) + strlen(list[1])+2;
+          int len2 = total - len;
+          if(len2 < 0) break; //You're on the 2nd arguments
+          s2 = malloc(len2+1); // one for the null terminator
+          memcpy(s2, (command+len), len2);
+          s2[len2] = '\0';
+          list[i++] = s2;
+          break;
         }
+        list[i] = strtok(NULL, " ");
+  }
+     
         printf("I is %d\n", i);
         printf("List[0] = %s\n", list[0]);
         if (isCommand(list[0])){
@@ -119,7 +120,6 @@ int main(int argc, char *argv[]){
                                 strcat(str, list[1]);
                                 i--;
                             }
-                            printf("Here\n");
                             send(sock, str, strlen(str), 0);
                             read(sock, buffer, 40);
                             if (strcmp(buffer, "Ok!") == 0){
@@ -185,7 +185,41 @@ int main(int argc, char *argv[]){
                    read(sock, buffer, 40);
                    if (strcmp(buffer, "Ok!") == 0) printf("\n%s\n", buffer);
                   }        
-                //Other commands
+                
+                else if(strcmp(list[0], "put") == 0){
+                  int sent = 1;
+                  do{
+                     memset(buffer, 0, sizeof(buffer));
+                     char str[] = "PUTMG!";
+                     if (i == 1){
+                        printf("put:>\n");
+                        scanf("%s", command);
+                        strcat(str, command);
+                    }else if (i == 2){
+                        strcat(str, list[1]);
+                        strcat(str, "!");
+                        i--;
+                        printf("put:>\n");
+                        scanf("%s", command);
+                        strcat(str, command);
+                    }else if(i == 3){
+                       strcat(str, list[1]);
+                       strcat(str, "!");
+                       strcat(str, list[2]);
+                       i = i-2;
+                     }
+                    send(sock, str, strlen(str), 0);
+                    read(sock, buffer, 40);
+                    if (strcmp(buffer, "Ok!") == 0){
+                        printf("%s\n", buffer);
+                        sent = 0;
+                   }else{
+                        printf("%s\n", buffer);
+                   }         
+                  }while(sent);
+               
+                }
+              //Other commands
             }else{
                 printf("A session with DUMB server was not intialized, please use the command HELLO to start.\n");
             }
@@ -194,6 +228,7 @@ int main(int argc, char *argv[]){
         //HELLO, help, and quit commands
         else{
             if(strcmp(command, "HELLO\n") == 0){
+                printf("Here\n");
                 send(sock, "HELLO", 5, 0);
                 read(sock, buffer, 40);
                 printf("Buffer is %s\n", buffer);
@@ -204,6 +239,9 @@ int main(int argc, char *argv[]){
                         printf("%s \n", buffer);
                         instanceIntiaited = 1;
                     }
+                }else{
+                  printf("Something went wrong closing the connection\n");
+                  serverIsLive = 0;
                 }
             }else if (strcmp(command, "quit\n") == 0){
                 send(sock, "GDBYE", 5, 0);
