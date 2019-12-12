@@ -168,14 +168,19 @@ int closer(Node * dummyHead, char * name){
 
 //return 1 on success, return 0 otherwise
 int putMessage(Node * dummyHead, char * name, char * message){
+  printf("In Put: name %s, message %s\n",name,message);
   Node * temp = dummyHead;
   if(temp->next == NULL){//empty
     return 0;
   }
   temp = temp->next;
   while(temp != NULL){
+    printf("0 temp name is %s\n",temp->name);
+    printf("%d\n",strcmp(temp->name, name));
     if(strcmp(temp->name, name) == 0){
+      printf("1\n");
       if(temp->open == 1){
+              printf("2\n");
          if(temp->msg == NULL){ //No message yet
             temp->msg = (Box *) malloc(sizeof(Box));
             temp->msg->rear = NULL;
@@ -300,8 +305,7 @@ void * run(void * arg){
               }else{
                 printf("NEXST\n");
                 write(client_sock, "ER:NEXST", 8);
-              }
-              
+              }              
             }
                 
             //Other commands     
@@ -310,12 +314,13 @@ void * run(void * arg){
           }
         }else if (i == 3){
           //It has to be put 
-          if(strcmp(list[0],"put")==0){
-            printf("In PUT"); 
+          if(strcmp(list[0],"PUTMG")==0){
+            printf("In PUT\n"); 
             if(putMessage(dummyHead,list[1],list[2])==1){
               printf("Put successfuly\n"); 
               write(client_sock, "Ok!", 3);                
             }else{
+               printf("ER:NOOPN\n");
                write(client_sock, "ER:NOOPN!", 3);
            }
           }

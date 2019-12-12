@@ -79,6 +79,7 @@ int main(int argc, char *argv[]){
         memset(command,0,sizeof(command));
         memset(buffer,0,sizeof(buffer));
         fgets(command, 40, stdin);
+        strtok(command, "\n");
         char *list[5];
         int i = 0;
         int total = strlen(command);
@@ -200,7 +201,7 @@ int main(int argc, char *argv[]){
                         strcat(str, "!");
                         i--;
                         printf("put:>\n");
-                        scanf("%s", command);
+                          scanf("%s", command);
                         strcat(str, command);
                     }else if(i == 3){
                        strcat(str, list[1]);
@@ -227,7 +228,7 @@ int main(int argc, char *argv[]){
        
         //HELLO, help, and quit commands
         else{
-            if(strcmp(command, "HELLO\n") == 0){
+            if(strcmp(command, "HELLO") == 0){
                 printf("Here\n");
                 send(sock, "HELLO", 5, 0);
                 read(sock, buffer, 40);
@@ -243,7 +244,7 @@ int main(int argc, char *argv[]){
                   printf("Something went wrong closing the connection\n");
                   serverIsLive = 0;
                 }
-            }else if (strcmp(command, "quit\n") == 0){
+            }else if (strcmp(command, "quit") == 0){
                 send(sock, "GDBYE", 5, 0);
                 if (read(sock, buffer, 40) < 1){
                     printf("socket can not be read from and was closed on server side\n");
