@@ -12,25 +12,25 @@ int serverRunning = 1;
 pthread_mutex_t lock;
 //Node * dummyHead;
 
-void enQueue(Box * b, char * msg){
+void enqueue(Box * b, char * msg){
   message * new = (message *)malloc(sizeof(message)); 
-    temp->message = msg; 
-    temp->next = NULL
+    new->message = msg; 
+    new->next = NULL;
     if (b->rear == NULL) { 
         b->front = new;
         b->rear = new; 
         return; 
     } 
-    b->rear->next = temp; 
-    b->rear = temp; 
+    b->rear->next = new; 
+    b->rear = new; 
 } 
 
-message * deQueue(Box * b) { 
+message * dequeue(Box * b) { 
     if (b->front == NULL)return NULL;   
-    message * temp = q->front; 
+    message * temp = b->front; 
     free(temp); 
-    q->front = q->front->next; 
-    if (q->front == NULL)q->rear = NULL; 
+    b->front = b->front->next; 
+    if (b->front == NULL)b->rear = NULL; 
     return temp; 
 } 
 
@@ -166,9 +166,31 @@ int closer(Node * dummyHead, char * name){
   return 0; //Was not found
 }
 
-int putter(Node * dummyHead, char * name){
-  
-}
+//return 1 on success, return 0 otherwise
+int putMessage(Node * dummyHead, char * name, char * message){
+  Node * temp = dummyHead;
+  if(temp->next == NULL){//empty
+    return 0;
+  }
+  temp = temp->next;
+  while(temp != NULL){
+    if(strcmp(temp->name, name) == 0){
+      if(temp->open == 1){
+         if(temp->msg == NULL){ //No message yet
+            temp->msg = (Box *) malloc(sizeof(Box));
+            temp->msg->rear = NULL;
+            temp->msg->front = NULL;
+        }
+        enqueue(temp->msg,message);
+        return 1;
+      }else{ //Not open
+        return 0;
+      }
+    }
+    temp = temp->next;
+  } 
+return 0;
+ }
 
 
 void * run(void * arg){
@@ -185,7 +207,7 @@ void * run(void * arg){
         int i = 0;
         printf("Buffer is %s\n", buffer);
         if(strchr(buffer, '!') >0){//Is put 
-          list[i] =strtpl(buffer,"!");
+          list[i] =strtok(buffer,"!");
           while (list[i] != NULL){
             i++;
             list[i] = strtok(NULL, "!");
@@ -290,6 +312,12 @@ void * run(void * arg){
           //It has to be put 
           if(strcmp(list[0],"put")==0){
             printf("In PUT"); 
+            if(putMessage(dummyHead,list[1],list[2])==1){
+              printf("Put successfuly\n"); 
+              write(client_sock, "Ok!", 3);                
+            }else{
+               write(client_sock, "ER:NOOPN!", 3);
+           }
           }
           
           
